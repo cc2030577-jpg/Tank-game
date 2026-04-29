@@ -1,1 +1,975 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Maze</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&amp;display=swap" rel="stylesheet">
+  <style>
+html, body { margin:0; padding:0; height:100%; overflow:hidden; }
+canvas { display:block; }
+body { box-sizing: border-box; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-black" style="margin:0; padding:0;">
+  <canvas id="game" style="display:block; width:100%; height:100%; margin:0; padding:0;"></canvas>
+  <div id="shoot-btn" style="position:fixed; bottom:30px; right:30px; width:80px; height:80px; background:#e63946; border:none; border-radius:50%; cursor:pointer; font-size:24px; color:white; display:flex; align-items:center; justify-content:center; user-select:none; font-weight:bold; box-shadow:0 4px 12px rgba(230,57,70,0.4); touch-action:none; transition:all 100ms; data-pressed='false';">
+   FIRE
+  </div>
+  <div id="lock-btn" style="position:fixed; bottom:120px; left:30px; width:80px; height:80px; background:#ffaa00; border:none; border-radius:50%; cursor:pointer; font-size:18px; color:white; display:flex; align-items:center; justify-content:center; user-select:none; font-weight:bold; box-shadow:0 4px 12px rgba(255,170,0,0.4); touch-action:none; transition:all 100ms; data-pressed='false';">
+   LOCK
+  </div>
+  <div id="weapon-switch" style="position:fixed; bottom:130px; right:30px; width:80px; height:60px; background:#444; border:2px solid #888; border-radius:8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; font-size:11px; color:#fff; font-family:Orbitron; font-weight:bold; touch-action:none; transition:all 100ms;">
+   <div style="font-size:14px; margin-bottom:3px;">
+    GUN
+   </div>
+   <div style="font-size:9px; opacity:0.7;">
+    E to switch
+   </div>
+  </div>
+  <div id="repair-btn" style="position:fixed; bottom:50px; left:30px; width:60px; height:50px; background:#44cc66; border:2px solid #00aa00; border-radius:6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; font-size:9px; color:#000; font-family:Orbitron; font-weight:bold; touch-action:none; transition:all 100ms;">
+   <div style="font-size:12px;">
+    REPAIR
+   </div>
+   <div style="font-size:7px;">
+    R
+   </div>
+  </div><button id="exit-btn" style="display:none; position:fixed; bottom:220px; left:30px; width:60px; height:50px; background:#e63946; border:2px solid #e63946; border-radius:6px; cursor:pointer; align-items:center; justify-content:center; user-select:none; font-size:11px; color:#fff; font-family:Orbitron; font-weight:bold; touch-action:none; transition:all 100ms;">EXIT</button>
+  <div id="start-menu" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:2000; gap:40px;">
+   <div style="font-family:Orbitron; font-size:48px; font-weight:900; color:#a8dadc; text-align:center;">
+    TANK MAZE
+   </div>
+   <div style="font-family:Orbitron; font-size:16px; color:#edf2f4; text-align:center; margin-bottom:20px;">
+    Choose Game Mode
+   </div>
+   <div style="display:flex; gap:30px;">
+    <button id="single-player-btn" type="button" style="padding:20px 40px; background:#44cc66; color:#000; border:none; border-radius:8px; cursor:pointer; font-family:Orbitron; font-weight:bold; font-size:18px; transition:all 100ms;">SINGLE PLAYER</button>
+   </div>
+   <div style="font-family:Orbitron; font-size:12px; color:#edf2f4; text-align:center;">
+    Choose Tank Color
+   </div>
+   <div id="color-selector" style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center; max-width:300px;"><button class="color-btn" data-color="#a8dadc" style="width:40px; height:40px; background:#a8dadc; border:3px solid #fff; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#ff0000" style="width:40px; height:40px; background:#ff0000; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#ff7700" style="width:40px; height:40px; background:#ff7700; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#ffff00" style="width:40px; height:40px; background:#ffff00; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#00ff00" style="width:40px; height:40px; background:#00ff00; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#0099ff" style="width:40px; height:40px; background:#0099ff; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#6600ff" style="width:40px; height:40px; background:#6600ff; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#ff0099" style="width:40px; height:40px; background:#ff0099; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#ff6666" style="width:40px; height:40px; background:#ff6666; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#aa6633" style="width:40px; height:40px; background:#aa6633; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#999999" style="width:40px; height:40px; background:#999999; border:2px solid #333; border-radius:50%; cursor:pointer; transition:all 100ms;"></button> <button class="color-btn" data-color="#000000" style="width:40px; height:40px; background:#000000; border:3px solid #fff; border-radius:50%; cursor:pointer; transition:all 100ms;"></button>
+   </div>
+  </div>
+  <div id="pvp-setup-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2100; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
+   <div style="font-family:Orbitron; font-size:36px; font-weight:900; color:#a8dadc;">
+    PLAYER 1 VS PLAYER 2
+   </div>
+   <div style="display:flex; gap:40px; align-items:flex-start;">
+    <div style="display:flex; flex-direction:column; gap:15px; align-items:center;">
+     <div style="font-family:Orbitron; font-size:18px; color:#a8dadc;">
+      Player 1
+     </div><input type="text" id="p1-name" placeholder="Name" maxlength="16" style="padding:8px; border:2px solid #44cc66; border-radius:6px; background:#333; color:#fff; font-family:Orbitron; font-size:14px; width:180px; text-align:center;" value="Player 1">
+     <div style="font-family:Orbitron; font-size:12px; color:#edf2f4;">
+      Tank Color
+     </div>
+     <div id="p1-color-selector" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:180px;"><button class="p1-color-btn" data-color="#a8dadc" style="width:30px; height:30px; background:#a8dadc; border:2px solid #fff; border-radius:50%; cursor:pointer;"></button> <button class="p1-color-btn" data-color="#ff0000" style="width:30px; height:30px; background:#ff0000; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p1-color-btn" data-color="#00ff00" style="width:30px; height:30px; background:#00ff00; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p1-color-btn" data-color="#0099ff" style="width:30px; height:30px; background:#0099ff; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p1-color-btn" data-color="#ffff00" style="width:30px; height:30px; background:#ffff00; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p1-color-btn" data-color="#ff7700" style="width:30px; height:30px; background:#ff7700; border:2px solid #333; border-radius:50%; cursor:pointer;"></button>
+     </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:15px; align-items:center;">
+     <div style="font-family:Orbitron; font-size:18px; color:#a8dadc;">
+      Player 2
+     </div><input type="text" id="p2-name" placeholder="Name" maxlength="16" style="padding:8px; border:2px solid #44cc66; border-radius:6px; background:#333; color:#fff; font-family:Orbitron; font-size:14px; width:180px; text-align:center;" value="Player 2">
+     <div style="font-family:Orbitron; font-size:12px; color:#edf2f4;">
+      Tank Color
+     </div>
+     <div id="p2-color-selector" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:180px;"><button class="p2-color-btn" data-color="#ff0099" style="width:30px; height:30px; background:#ff0099; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p2-color-btn" data-color="#6600ff" style="width:30px; height:30px; background:#6600ff; border:3px solid #fff; border-radius:50%; cursor:pointer;"></button> <button class="p2-color-btn" data-color="#ff6666" style="width:30px; height:30px; background:#ff6666; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p2-color-btn" data-color="#999999" style="width:30px; height:30px; background:#999999; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p2-color-btn" data-color="#00ffff" style="width:30px; height:30px; background:#00ffff; border:2px solid #333; border-radius:50%; cursor:pointer;"></button> <button class="p2-color-btn" data-color="#aa6633" style="width:30px; height:30px; background:#aa6633; border:2px solid #333; border-radius:50%; cursor:pointer;"></button>
+     </div>
+    </div>
+   </div><button id="start-pvp-btn" type="button" style="padding:12px 40px; background:#44cc66; color:#000; border:none; border-radius:8px; cursor:pointer; font-family:Orbitron; font-weight:bold; font-size:16px; margin-top:20px;">START BATTLE</button> <button id="cancel-pvp-btn" type="button" style="padding:12px 40px; background:#e63946; color:#fff; border:none; border-radius:8px; cursor:pointer; font-family:Orbitron; font-weight:bold; font-size:16px;">BACK TO MENU</button>
+  </div>
+  <div id="lock-alert" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#ff0000; color:#fff; padding:15px 25px; border-radius:8px; font-family:Orbitron; font-weight:bold; font-size:16px; z-index:1200; box-shadow:0 0 20px rgba(255,0,0,0.6); animation:pulse 0.6s infinite;">
+   ⚠ LOCKED ON ⚠
+  </div>
+  <style>
+    @keyframes pulse {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+      50% { transform: translateX(-50%) scale(1.05); opacity: 0.8; }
+    }
+  </style>
+  <script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
+// CONFIG
+const defaultConfig = {
+  game_title: 'Tank Maze',
+  difficulty: 'normal',
+  background_color: '#1a1a2e',
+  surface_color: '#4a4e69',
+  text_color: '#edf2f4',
+  primary_action_color: '#e63946',
+  secondary_action_color: '#a8dadc'
+};
+
+let config = { ...defaultConfig };
+
+// SERVER CONFIG
+const SERVER_URL = 'http://localhost:3000'; // Change this to your server URL
+let socket = null;
+let playerId = null;
+let gameSessionId = null;
+let isMultiplayer = false;
+let otherPlayers = {};
+
+// CONSTANTS
+const COLS = 41, ROWS = 41, TILE = 32;
+const LOOT_RESPAWN_TIME = 3600;
+
+// STATE
+const maze = [];
+const hardWalls = [];
+const bullets = [];
+const enemies = [];
+const particles = [];
+const lootBoxes = [];
+const keys = {};
+
+let gameMode = 'menu';
+let gameState = 'menu';
+let currentLevel = 1;
+let camX = 0, camY = 0;
+let isEverlasting = false;
+let lootSpawnTimer = 0;
+
+const player = { x: 1.5*TILE, y: 1.5*TILE, angle: 0, hp: 100, maxHp: 100, lives: 3, maxLives: 3, score: 0, kills: 0, cooldown: 0, lockedTarget: null, guidedMissiles: 0, weapon: 'gun', medkits: 0, color: '#a8dadc', name: 'Player 1' };
+
+let exitPos = { x: 0, y: 0 };
+
+// DOM
+const startMenu = document.getElementById('start-menu');
+const singlePlayerBtn = document.getElementById('single-player-btn');
+const exitBtn = document.getElementById('exit-btn');
+const shootBtn = document.getElementById('shoot-btn');
+const lockBtn = document.getElementById('lock-btn');
+const chaffBtn = document.getElementById('chaff-btn');
+const weaponSwitch = document.getElementById('weapon-switch');
+const repairBtn = document.getElementById('repair-btn');
+const lockAlert = document.getElementById('lock-alert');
+
+// MAZE GEN
+function genMaze() {
+  for (let y = 0; y < ROWS; y++) {
+    maze[y] = [];
+    hardWalls[y] = [];
+    for (let x = 0; x < COLS; x++) {
+      maze[y][x] = 1;
+      hardWalls[y][x] = 0;
+    }
+  }
+  function carve(x, y) {
+    maze[y][x] = 0;
+    const dirs = [[0,-2],[0,2],[-2,0],[2,0]].sort(() => Math.random() - 0.5);
+    for (const [dx, dy] of dirs) {
+      const nx = x+dx, ny = y+dy;
+      if (nx > 0 && nx < COLS-1 && ny > 0 && ny < ROWS-1 && maze[ny][nx] === 1) {
+        maze[y+dy/2][x+dx/2] = 0;
+        carve(nx, ny);
+      }
+    }
+  }
+  carve(1, 1);
+  for (let i = 0; i < 15; i++) {
+    let x = Math.floor(Math.random() * (COLS-4)) + 2;
+    let y = Math.floor(Math.random() * (ROWS-4)) + 2;
+    for (let j = 0; j < 8; j++) {
+      if (x > 1 && x < COLS-2 && y > 1 && y < ROWS-2) {
+        maze[y][x] = 0;
+        const dirs = [[0,-1],[0,1],[-1,0],[1,0]].sort(() => Math.random() - 0.5);
+        const [dx, dy] = dirs[0];
+        x += dx;
+        y += dy;
+      }
+    }
+  }
+}
+
+function wallAt(px, py) {
+  const gx = Math.floor(px/TILE), gy = Math.floor(py/TILE);
+  if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return true;
+  return maze[gy][gx] === 1;
+}
+
+function tryMove(obj, dx, dy, r) {
+  if (!wallAt(obj.x+dx-r, obj.y-r) && !wallAt(obj.x+dx+r, obj.y-r) && !wallAt(obj.x+dx-r, obj.y+r) && !wallAt(obj.x+dx+r, obj.y+r)) obj.x += dx;
+  if (!wallAt(obj.x-r, obj.y+dy-r) && !wallAt(obj.x+r, obj.y+dy-r) && !wallAt(obj.x-r, obj.y+dy+r) && !wallAt(obj.x+r, obj.y+dy+r)) obj.y += dy;
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random()*Math.PI*2, s = Math.random()*3+1;
+    particles.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 30+Math.random()*20, color });
+  }
+}
+
+function spawnExplosion(x, y) {
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      spawnParticles(x, y, '#ff4444', 30);
+      spawnParticles(x, y, '#ffaa00', 20);
+      spawnParticles(x, y, '#ffff00', 15);
+    }, i * 50);
+  }
+}
+
+function fireBullet(x, y, angle, owner) {
+  bullets.push({ x, y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, owner, life: 80 });
+}
+
+function spawnEnemies() {
+  enemies.length = 0;
+  let count = 0;
+  let enemyCount = 0;
+  
+  if (isEverlasting) {
+    enemyCount = 10 + Math.floor((currentLevel - 9) / 0.5) * 10;
+  } else if (config.difficulty === 'easy') {
+    enemyCount = 4 + currentLevel * 2;
+  } else if (config.difficulty === 'hard') {
+    enemyCount = 16 + currentLevel * 8;
+  } else {
+    enemyCount = 10 + currentLevel * 4;
+  }
+  
+  for (let y = 2; y < ROWS-1; y++) {
+    for (let x = 2; x < COLS-1; x++) {
+      if (maze[y][x] === 0 && (x > 5 || y > 5) && Math.random() < 0.08 && count < enemyCount) {
+        enemies.push({ x: (x+0.5)*TILE, y: (y+0.5)*TILE, angle: Math.random()*Math.PI*2, hp: 1, cooldown: Math.random()*120+60, moveTimer: 0, moveDir: Math.random()*Math.PI*2, path: [], pathIndex: 0, targetX: null, targetY: null, aggro: false });
+        count++;
+      }
+    }
+  }
+}
+
+function spawnLootBoxes() {
+  lootBoxes.length = 0;
+  let count = 0;
+  for (let y = 3; y < ROWS-2; y++) {
+    for (let x = 3; x < COLS-2; x++) {
+      if (maze[y][x] === 0 && Math.random() < 0.035 && count < 50) {
+        const type = Math.random() < 0.5 ? 'medkit' : 'missile';
+        lootBoxes.push({ x: (x+0.5)*TILE, y: (y+0.5)*TILE, type, collected: false });
+        count++;
+      }
+    }
+  }
+}
+
+function findExit() {
+  for (let y = ROWS-3; y > ROWS-5; y--) {
+    for (let x = COLS-3; x > COLS-5; x--) {
+      if (maze[y][x] === 0) {
+        exitPos.x = (x+0.5)*TILE;
+        exitPos.y = (y+0.5)*TILE;
+        return;
+      }
+    }
+  }
+}
+
+function updateWeaponDisplay() {
+  weaponSwitch.innerHTML = player.weapon === 'gun' 
+    ? '<div style="font-size:14px; margin-bottom:3px;">GUN</div><div style="font-size:9px; opacity:0.7;">E to switch</div>'
+    : '<div style="font-size:14px; margin-bottom:3px;">MISSILE</div><div style="font-size:9px; opacity:0.7;">E to switch</div>';
+}
+
+function resetGame() {
+  genMaze();
+  player.x = 1.5*TILE; player.y = 1.5*TILE; player.angle = 0; player.hp = player.maxHp;
+  player.lives = player.maxLives;
+  player.score = 0; player.cooldown = 0; player.lockedTarget = null; player.guidedMissiles = 0; player.medkits = 0; player.weapon = 'gun';
+  bullets.length = 0; particles.length = 0;
+  spawnEnemies();
+  spawnLootBoxes();
+  findExit();
+  lootSpawnTimer = 0;
+  gameState = 'play';
+  updateWeaponDisplay();
+  
+  // Send game state to server if multiplayer
+  if (isMultiplayer && socket) {
+    socket.emit('player_state', {
+      sessionId: gameSessionId,
+      playerId: playerId,
+      x: player.x,
+      y: player.y,
+      angle: player.angle,
+      hp: player.hp,
+      score: player.score
+    });
+  }
+}
+
+function nextLevel() {
+  if (currentLevel >= 8) {
+    isEverlasting = true;
+    currentLevel = 9;
+    genMaze();
+    player.x = 1.5*TILE; player.y = 1.5*TILE; player.hp = Math.min(player.hp + 30, player.maxHp); player.lockedTarget = null;
+    bullets.length = 0; particles.length = 0;
+    spawnEnemies();
+    spawnLootBoxes();
+    findExit();
+    lootSpawnTimer = 0;
+    gameState = 'play';
+    return;
+  }
+  currentLevel++;
+  genMaze();
+  player.x = 1.5*TILE; player.y = 1.5*TILE; player.hp = Math.min(player.hp + 30, player.maxHp); player.lockedTarget = null;
+  bullets.length = 0; particles.length = 0;
+  spawnEnemies();
+  spawnLootBoxes();
+  findExit();
+  lootSpawnTimer = 0;
+  gameState = 'play';
+}
+
+// BUTTON EVENTS
+singlePlayerBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  gameMode = 'single';
+  isMultiplayer = false;
+  exitBtn.style.display = 'flex';
+  startMenu.style.display = 'none';
+  resetGame();
+});
+
+exitBtn.addEventListener('click', () => {
+  gameMode = 'menu';
+  gameState = 'menu';
+  isMultiplayer = false;
+  if (socket) {
+    socket.emit('leave_game', { sessionId: gameSessionId, playerId: playerId });
+    socket.disconnect();
+    socket = null;
+  }
+  exitBtn.style.display = 'none';
+  startMenu.style.display = 'flex';
+});
+
+weaponSwitch.addEventListener('click', () => {
+  player.weapon = player.weapon === 'gun' ? 'missile' : 'gun';
+  updateWeaponDisplay();
+});
+
+repairBtn.addEventListener('click', () => {
+  if (player.medkits > 0 && player.hp < player.maxHp) {
+    player.hp = Math.min(player.hp + 40, player.maxHp);
+    player.medkits--;
+    spawnParticles(player.x, player.y, '#44ff44', 12);
+  }
+});
+
+// SHOOT BUTTON
+shootBtn.addEventListener('mousedown', e => { e.preventDefault(); shootBtn.dataset.pressed = 'true'; shootBtn.style.transform = 'scale(0.92)'; });
+shootBtn.addEventListener('mouseup', e => { e.preventDefault(); shootBtn.dataset.pressed = 'false'; shootBtn.style.transform = 'scale(1)'; });
+shootBtn.addEventListener('mouseleave', e => { shootBtn.dataset.pressed = 'false'; shootBtn.style.transform = 'scale(1)'; });
+shootBtn.addEventListener('touchstart', e => { e.preventDefault(); shootBtn.dataset.pressed = 'true'; shootBtn.style.transform = 'scale(0.92)'; });
+shootBtn.addEventListener('touchend', e => { e.preventDefault(); shootBtn.dataset.pressed = 'false'; shootBtn.style.transform = 'scale(1)'; });
+
+// LOCK BUTTON
+lockBtn.addEventListener('mousedown', e => { e.preventDefault(); lockBtn.dataset.pressed = 'true'; lockBtn.style.transform = 'scale(0.92)'; });
+lockBtn.addEventListener('mouseup', e => { e.preventDefault(); lockBtn.dataset.pressed = 'false'; lockBtn.style.transform = 'scale(1)'; });
+lockBtn.addEventListener('mouseleave', e => { lockBtn.dataset.pressed = 'false'; lockBtn.style.transform = 'scale(1)'; });
+lockBtn.addEventListener('touchstart', e => { e.preventDefault(); lockBtn.dataset.pressed = 'true'; lockBtn.style.transform = 'scale(0.92)'; });
+lockBtn.addEventListener('touchend', e => { e.preventDefault(); lockBtn.dataset.pressed = 'false'; lockBtn.style.transform = 'scale(1)'; });
+
+// COLOR SELECTOR
+document.querySelectorAll('.color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    player.color = btn.dataset.color;
+    document.querySelectorAll('.color-btn').forEach(b => b.style.border = '2px solid #333');
+    btn.style.border = '3px solid #fff';
+    btn.style.boxShadow = '0 0 15px ' + btn.dataset.color;
+  });
+});
+
+// KEYBOARD
+window.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  keys[key] = true;
+  if (key === 'e') {
+    player.weapon = player.weapon === 'gun' ? 'missile' : 'gun';
+    updateWeaponDisplay();
+  }
+  if (key === 'r' && player.medkits > 0 && player.hp < player.maxHp) {
+    player.hp = Math.min(player.hp + 40, player.maxHp);
+    player.medkits--;
+    spawnParticles(player.x, player.y, '#44ff44', 12);
+  }
+  if ((gameState === 'over' || gameState === 'victory') && key !== 'tab') {
+    currentLevel = 1;
+    resetGame();
+  }
+});
+
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// TOUCH DRAG CONTROLS
+let touchStartX = 0, touchStartY = 0, isTouchDragging = false;
+
+canvas.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  isTouchDragging = true;
+}, { passive: true });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (!isTouchDragging || gameState !== 'play') return;
+  const touchX = e.touches[0].clientX;
+  const touchY = e.touches[0].clientY;
+  const dx = touchX - touchStartX;
+  const dy = touchY - touchStartY;
+  
+  if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+    const len = Math.sqrt(dx*dx + dy*dy);
+    player.angle = Math.atan2(dy, dx);
+    const speed = 2.5;
+    const normX = dx / len;
+    const normY = dy / len;
+    tryMove(player, normX * speed, 0, 10);
+    tryMove(player, 0, normY * speed, 10);
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', () => { isTouchDragging = false; }, { passive: true });
+
+// UPDATE
+function update() {
+  if (gameState !== 'play') return;
+
+  lootSpawnTimer++;
+  if (lootSpawnTimer >= LOOT_RESPAWN_TIME) {
+    spawnLootBoxes();
+    lootSpawnTimer = 0;
+  }
+
+  let mx = 0, my = 0;
+  if (keys['w'] || keys['arrowup']) my -= 1;
+  if (keys['s'] || keys['arrowdown']) my += 1;
+  if (keys['a'] || keys['arrowleft']) mx -= 1;
+  if (keys['d'] || keys['arrowright']) mx += 1;
+
+  if (mx !== 0 || my !== 0) {
+    const len = Math.sqrt(mx*mx+my*my);
+    mx /= len; my /= len;
+    player.angle = Math.atan2(my, mx);
+    const speed = 2.5;
+    tryMove(player, mx*speed, 0, 10);
+    tryMove(player, 0, my*speed, 10);
+  }
+
+  if (player.cooldown > 0) player.cooldown--;
+
+  if ((keys[' '] || keys['enter'] || (shootBtn && shootBtn.dataset.pressed === 'true')) && player.cooldown <= 0) {
+    if (player.weapon === 'gun') {
+      fireBullet(player.x + Math.cos(player.angle)*14, player.y + Math.sin(player.angle)*14, player.angle, 'player');
+      player.cooldown = 10;
+    } else if (player.weapon === 'missile' && player.lockedTarget) {
+      bullets.push({ x: player.x + Math.cos(player.angle)*14, y: player.y + Math.sin(player.angle)*14, vx: Math.cos(player.angle)*5, vy: Math.sin(player.angle)*5, owner: 'missile', life: 200, target: player.lockedTarget });
+      player.guidedMissiles--;
+      player.cooldown = 20;
+      // Unlock after firing
+      player.lockedTarget = null;
+      lockAlert.style.display = 'none';
+      if (player.guidedMissiles <= 0) {
+        player.weapon = 'gun';
+        updateWeaponDisplay();
+      }
+    }
+  }
+
+  // Lock targeting system
+  if (lockBtn.dataset.pressed === 'true' || keys['l']) {
+    let closestEnemy = null, closestDist = TILE * 15;
+    for (const e of enemies) {
+      if (e.hp <= 0) continue;
+      const dist = Math.sqrt((player.x - e.x)**2 + (player.y - e.y)**2);
+      if (dist < closestDist) {
+        closestEnemy = e;
+        closestDist = dist;
+      }
+    }
+    if (closestEnemy && closestDist < TILE * 15) {
+      player.lockedTarget = closestEnemy;
+      lockAlert.style.display = 'flex';
+    } else {
+      player.lockedTarget = null;
+      lockAlert.style.display = 'none';
+    }
+  }
+
+  // Collect loot
+  for (const box of lootBoxes) {
+    if (box.collected) continue;
+    const dx = player.x - box.x, dy = player.y - box.y, dist = Math.sqrt(dx*dx+dy*dy);
+    if (dist < 20) {
+      box.collected = true;
+      if (box.type === 'medkit') {
+        player.medkits++;
+        spawnParticles(box.x, box.y, '#44ff44', 12);
+      } else {
+        player.guidedMissiles += 8;
+        spawnParticles(box.x, box.y, '#ffaa00', 12);
+      }
+    }
+  }
+
+  // Check exit
+  const exitDist = Math.sqrt((player.x - exitPos.x)**2 + (player.y - exitPos.y)**2);
+  if (exitDist < 25) {
+    player.score += 1000;
+    nextLevel();
+  }
+
+  // Enemies AI
+  for (const e of enemies) {
+    if (e.hp <= 0) continue;
+    const dx = player.x - e.x, dy = player.y - e.y, dist = Math.sqrt(dx*dx+dy*dy);
+    const AGGRO_RANGE = TILE * 12, SHOOT_RANGE = TILE * 10;
+
+    // Check if player in range
+    if (dist < AGGRO_RANGE) {
+      e.aggro = true;
+      e.targetX = Math.floor(player.x / TILE);
+      e.targetY = Math.floor(player.y / TILE);
+    } else {
+      e.aggro = false;
+    }
+
+    if (e.aggro) {
+      // Chase player with pathfinding
+      e.angle = Math.atan2(dy, dx);
+      const moveX = Math.cos(e.angle);
+      const moveY = Math.sin(e.angle);
+      
+      // Prevent overlap with player
+      if (dist > 22) {
+        tryMove(e, moveX * 1.2, moveY * 1.2, 10);
+      }
+    } else {
+      // Random wandering
+      e.moveTimer--;
+      if (e.moveTimer <= 0) {
+        e.moveDir = Math.random()*Math.PI*2;
+        e.moveTimer = 60 + Math.random()*100;
+      }
+      tryMove(e, Math.cos(e.moveDir)*0.6, Math.sin(e.moveDir)*0.6, 10);
+      e.angle = e.moveDir;
+    }
+
+    e.cooldown--;
+    if (e.cooldown <= 0 && dist < SHOOT_RANGE) {
+      fireBullet(e.x + Math.cos(e.angle)*14, e.y + Math.sin(e.angle)*14, e.angle, 'enemy');
+      e.cooldown = 80 + Math.random()*60;
+    }
+  }
+
+  // Bullets
+  for (let i = bullets.length-1; i >= 0; i--) {
+    const b = bullets[i];
+    
+    // Guided missile tracking
+    if (b.owner === 'missile' && b.target && b.target.hp > 0) {
+      const dx = b.target.x - b.x;
+      const dy = b.target.y - b.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const targetAngle = Math.atan2(dy, dx);
+      
+      // Smooth turning towards target
+      let angleDiff = targetAngle - Math.atan2(b.vy, b.vx);
+      while (angleDiff > Math.PI) angleDiff -= Math.PI*2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI*2;
+      
+      const turnSpeed = 0.15;
+      const newAngle = Math.atan2(b.vy, b.vx) + Math.max(-turnSpeed, Math.min(turnSpeed, angleDiff));
+      const speed = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+      b.vx = Math.cos(newAngle) * speed;
+      b.vy = Math.sin(newAngle) * speed;
+    }
+    
+    b.x += b.vx; b.y += b.vy; b.life--;
+    
+    if (b.life <= 0 || (b.owner !== 'missile' && wallAt(b.x, b.y))) {
+      spawnParticles(b.x, b.y, '#ffaa33', 5);
+      bullets.splice(i, 1);
+      continue;
+    }
+
+    // Hit enemies
+    if (b.owner === 'player' || b.owner === 'missile') {
+      for (const e of enemies) {
+        if (e.hp <= 0) continue;
+        const hitDist = Math.sqrt((b.x-e.x)**2 + (b.y-e.y)**2);
+        if (hitDist < 16) {
+          e.hp--;
+          if (e.hp <= 0) { player.score += 100; spawnExplosion(e.x, e.y); }
+          spawnParticles(b.x, b.y, '#ffaa33', 8);
+          bullets.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    // Hit player
+    if (b.owner === 'enemy') {
+      if (Math.abs(b.x-player.x)<12 && Math.abs(b.y-player.y)<12) {
+        player.hp -= 10;
+        spawnParticles(player.x, player.y, config.secondary_action_color, 8);
+        bullets.splice(i, 1);
+        if (player.hp <= 0) {
+          player.lives--;
+          if (player.lives <= 0) {
+            gameState = 'over';
+            spawnParticles(player.x, player.y, '#ff0000', 30);
+            // Send game over to server if multiplayer
+            if (isMultiplayer && socket) {
+              socket.emit('game_over', { sessionId: gameSessionId, playerId: playerId, score: player.score });
+            }
+          } else {
+            player.hp = player.maxHp;
+            player.x = 1.5*TILE;
+            player.y = 1.5*TILE;
+          }
+        }
+      }
+    }
+  }
+
+  // Send player state to server periodically if multiplayer
+  if (isMultiplayer && socket && Math.random() < 0.1) {
+    socket.emit('player_state', {
+      sessionId: gameSessionId,
+      playerId: playerId,
+      x: player.x,
+      y: player.y,
+      angle: player.angle,
+      hp: player.hp,
+      score: player.score,
+      weapon: player.weapon
+    });
+  }
+
+  // Particles
+  for (let i = particles.length-1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.life--;
+    p.vx *= 0.96; p.vy *= 0.96;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // Win check
+  if (enemies.length > 0 && enemies.every(e => e.hp <= 0)) {
+    spawnParticles(player.x, player.y, '#ffff00', 20);
+    player.score += 500;
+    if (isEverlasting) {
+      currentLevel++;
+      genMaze();
+      player.x = 1.5*TILE; player.y = 1.5*TILE; player.hp = Math.min(player.hp + 30, player.maxHp); player.lockedTarget = null;
+      bullets.length = 0; particles.length = 0;
+      spawnEnemies();
+      spawnLootBoxes();
+      findExit();
+      lootSpawnTimer = 0;
+    } else {
+      nextLevel();
+    }
+  }
+}
+
+// DRAW
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = config.background_color;
+  ctx.fillRect(0, 0, W, H);
+
+  if (gameState !== 'play') {
+    if (gameState === 'over') {
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = config.primary_action_color;
+      ctx.font = '900 42px Orbitron';
+      ctx.textAlign = 'center';
+      ctx.fillText('DESTROYED', W/2, H/2-30);
+      ctx.fillStyle = config.text_color;
+      ctx.font = '400 20px Orbitron';
+      ctx.fillText('Score: ' + player.score, W/2, H/2+20);
+      ctx.fillStyle = config.secondary_action_color;
+      ctx.font = '400 16px Orbitron';
+      ctx.fillText('Press any key to retry', W/2, H/2+60);
+    }
+    if (gameState === 'victory') {
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#ffff00';
+      ctx.font = '900 56px Orbitron';
+      ctx.textAlign = 'center';
+      ctx.fillText('VICTORY!', W/2, H/2-60);
+      ctx.fillStyle = config.secondary_action_color;
+      ctx.font = '400 28px Orbitron';
+      ctx.fillText('All 8 Levels Completed!', W/2, H/2);
+      ctx.fillStyle = config.text_color;
+      ctx.font = '400 20px Orbitron';
+      ctx.fillText('Final Score: ' + player.score, W/2, H/2+50);
+      ctx.fillStyle = config.secondary_action_color;
+      ctx.font = '400 16px Orbitron';
+      ctx.fillText('Press any key to play again', W/2, H/2+100);
+    }
+    return;
+  }
+
+  camX = player.x - W/2;
+  camY = player.y - H/2;
+  ctx.save();
+  ctx.translate(-camX, -camY);
+
+  // Draw maze
+  const startCol = Math.max(0, Math.floor(camX/TILE));
+  const endCol = Math.min(COLS, Math.ceil((camX+W)/TILE));
+  const startRow = Math.max(0, Math.floor(camY/TILE));
+  const endRow = Math.min(ROWS, Math.ceil((camY+H)/TILE));
+
+  for (let y = startRow; y < endRow; y++) {
+    for (let x = startCol; x < endCol; x++) {
+      if (maze[y][x] === 1) {
+        ctx.fillStyle = '#888888';
+        ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(x*TILE, y*TILE+TILE-4, TILE, 4);
+        ctx.fillRect(x*TILE+TILE-4, y*TILE, 4, TILE);
+      } else {
+        ctx.fillStyle = config.background_color;
+        ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+        ctx.fillStyle = 'rgba(255,255,255,0.02)';
+        if ((x+y)%2===0) ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+      }
+    }
+  }
+
+  // Draw particles
+  for (const p of particles) {
+    ctx.globalAlpha = p.life / 50;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2+p.life/15, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Draw loot
+  for (const box of lootBoxes) {
+    if (box.collected) continue;
+    ctx.save();
+    ctx.translate(box.x, box.y);
+    if (box.type === 'medkit') {
+      ctx.fillStyle = '#44ff44';
+      ctx.fillRect(-10, -10, 20, 20);
+      ctx.fillStyle = '#00aa00';
+      ctx.fillRect(-3, -8, 6, 16);
+      ctx.fillRect(-8, -3, 16, 6);
+    } else {
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(-10, -10, 20, 20);
+      ctx.fillStyle = '#ff8800';
+      ctx.beginPath();
+      ctx.moveTo(-5, -10);
+      ctx.lineTo(0, -3);
+      ctx.lineTo(5, -10);
+      ctx.fill();
+      ctx.fillRect(-4, -5, 8, 10);
+    }
+    ctx.restore();
+  }
+
+  // Draw exit
+  ctx.save();
+  ctx.translate(exitPos.x, exitPos.y);
+  const time = Date.now() / 1000;
+  ctx.fillStyle = `hsl(${(time * 100) % 360}, 100%, 50%)`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 14, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  // Draw enemies
+  for (const e of enemies) {
+    if (e.hp <= 0) continue;
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
+    ctx.fillStyle = config.primary_action_color;
+    ctx.fillRect(-11, -11, 22, 22);
+    ctx.fillStyle = '#cc2233';
+    ctx.fillRect(0, -3, 16, 6);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(-11, -13, 22, 3);
+    ctx.fillRect(-11, 10, 22, 3);
+    ctx.restore();
+  }
+
+  // Draw other players if multiplayer
+  for (const playerId in otherPlayers) {
+    const op = otherPlayers[playerId];
+    ctx.save(); ctx.translate(op.x, op.y); ctx.rotate(op.angle);
+    ctx.fillStyle = op.color || '#00ff00';
+    ctx.fillRect(-12, -12, 24, 24);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(2, -4, 18, 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(-12, -14, 24, 3);
+    ctx.fillRect(-12, 11, 24, 3);
+    // Draw name above player
+    ctx.restore();
+    ctx.fillStyle = '#fff';
+    ctx.font = '400 12px Orbitron';
+    ctx.textAlign = 'center';
+    ctx.fillText(op.name || 'Player', op.x - camX, op.y - camY - 30);
+  }
+
+  // Draw player
+  ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle);
+  ctx.fillStyle = player.color;
+  ctx.fillRect(-12, -12, 24, 24);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillRect(2, -4, 18, 8);
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(-12, -14, 24, 3);
+  ctx.fillRect(-12, 11, 24, 3);
+  ctx.restore();
+
+  // Draw bullets
+  for (const b of bullets) {
+    ctx.fillStyle = b.owner === 'player' ? '#ffdd44' : '#ff6644';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 3, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+
+  // HUD
+  ctx.font = '700 16px Orbitron'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(16, 16, 160, 24);
+  ctx.fillStyle = player.hp > 30 ? '#44cc66' : '#ff4444';
+  ctx.fillRect(16, 16, 160*(player.hp/player.maxHp), 24);
+  ctx.fillStyle = config.text_color;
+  ctx.fillText('HP', 24, 34);
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(16, 50, 200, 80);
+  ctx.fillStyle = config.text_color;
+  ctx.font = '400 13px Orbitron';
+  ctx.fillText('MEDKITS: ' + player.medkits, 24, 68);
+  ctx.fillText('MISSILES: ' + player.guidedMissiles, 24, 88);
+  if (player.lockedTarget) {
+    ctx.fillStyle = '#ff0000';
+    ctx.font = '700 13px Orbitron';
+    ctx.fillText('⚠ LOCKED ON ⚠', 24, 108);
+  } else {
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = '400 13px Orbitron';
+    ctx.fillText('LOCK: Ready', 24, 108);
+  }
+  
+
+
+  ctx.textAlign = 'right';
+  ctx.font = '700 16px Orbitron';
+  ctx.fillStyle = config.text_color;
+  ctx.fillText('LIVES: ' + player.lives, W - 20, 34);
+  ctx.fillText('LEVEL: ' + (isEverlasting ? 'ENDLESS' : currentLevel + '/8'), W - 20, 55);
+  ctx.fillText('SCORE: ' + player.score, W - 20, 75);
+  if (isEverlasting) {
+    ctx.font = '700 14px Orbitron';
+    ctx.fillText('WAVE: ' + Math.floor((enemies.length - 10) / 10 + 1), W - 20, 95);
+  }
+  ctx.textAlign = 'center';
+  ctx.font = '400 13px Orbitron';
+  const alive = enemies.filter(e=>e.hp>0).length;
+  ctx.fillText(alive + ' enemies remaining', W/2, 30);
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// INIT
+genMaze();
+spawnEnemies();
+spawnLootBoxes();
+findExit();
+loop();
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// SERVER CONNECTION (Optional - for multiplayer)
+function connectToServer() {
+  try {
+    // This assumes you have Socket.IO library loaded or are using a WebSocket connection
+    // Adjust based on your server setup
+    if (typeof io !== 'undefined') {
+      socket = io(SERVER_URL);
+      
+      socket.on('connect', () => {
+        playerId = socket.id;
+        console.log('Connected to server:', playerId);
+      });
+
+      socket.on('player_joined', (data) => {
+        if (data.playerId !== playerId) {
+          otherPlayers[data.playerId] = {
+            x: data.x,
+            y: data.y,
+            angle: data.angle,
+            hp: data.hp,
+            color: data.color,
+            name: data.name
+          };
+        }
+      });
+
+      socket.on('player_update', (data) => {
+        if (data.playerId !== playerId && otherPlayers[data.playerId]) {
+          otherPlayers[data.playerId].x = data.x;
+          otherPlayers[data.playerId].y = data.y;
+          otherPlayers[data.playerId].angle = data.angle;
+          otherPlayers[data.playerId].hp = data.hp;
+        }
+      });
+
+      socket.on('player_left', (data) => {
+        delete otherPlayers[data.playerId];
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+        isMultiplayer = false;
+        otherPlayers = {};
+      });
+    }
+  } catch (e) {
+    console.log('Server connection not available - running in single player mode');
+  }
+}
+
+// Uncomment to enable server connection
+// connectToServer();
+
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f417b02d071143b',t:'MTc3NzQ5ODk4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
